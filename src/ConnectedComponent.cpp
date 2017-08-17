@@ -1,11 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-constexpr double TIME_LIMIT = 2000;
+constexpr double TIME_LIMIT = 3000;
 constexpr int MAX_S = 500;
 
 int S;
 int M[MAX_S][MAX_S];
+int C[MAX_S + 2][MAX_S + 2];
 
 double get_time() {
   unsigned long long a, d;
@@ -25,6 +26,7 @@ class ConnectedComponent {
   vector<int> permute(vector<int> matrix) {
     double START_TIME = get_time();
     S = (int)sqrt(matrix.size());
+    memset(C, 0, sizeof(C));
     for (int i = 0; i < S; ++i) {
       for (int j = 0; j < S; ++j) {
         M[i][j] = matrix[i * S + j];
@@ -35,6 +37,8 @@ class ConnectedComponent {
     for (int i = 0; i < S; ++i) {
       ret[i] = i;
     }
+    int qx[MAX_S * MAX_S];
+    int qy[MAX_S * MAX_S];
     while (true) {
       double time = (START_TIME + TIME_LIMIT - get_time()) / TIME_LIMIT;
       if (time < 0) break;
@@ -42,8 +46,60 @@ class ConnectedComponent {
       int b = get_random() % S;
       if (a == b) continue;
       swap(ret, a, b);
-      double s = calc(ret);
-      if (score < s) {
+
+      for (int i = 0; i < S; ++i)
+        for (int j = 0; j < S; ++j) C[i + 1][j + 1] = M[ret[i]][ret[j]];
+      double s = 0;
+      auto search = [&](int x, int y) {
+        if (C[x][y] == 0) return;
+        int qi = 0, qs = 1, sum = C[x][y];
+        C[x][y] = 0;
+        qx[qi] = x;
+        qy[qi] = y;
+        while (qi < qs) {
+          x = qx[qi];
+          y = qy[qi];
+          ++qi;
+          if (C[x + 1][y]) {
+            sum += C[x + 1][y];
+            C[x + 1][y] = 0;
+            qx[qs] = x + 1;
+            qy[qs] = y;
+            ++qs;
+          }
+          if (C[x - 1][y]) {
+            sum += C[x - 1][y];
+            C[x - 1][y] = 0;
+            qx[qs] = x - 1;
+            qy[qs] = y;
+            ++qs;
+          }
+          if (C[x][y + 1]) {
+            sum += C[x][y + 1];
+            C[x][y + 1] = 0;
+            qx[qs] = x;
+            qy[qs] = y + 1;
+            ++qs;
+          }
+          if (C[x][y - 1]) {
+            sum += C[x][y - 1];
+            C[x][y - 1] = 0;
+            qx[qs] = x;
+            qy[qs] = y - 1;
+            ++qs;
+          }
+        }
+        double t = sum * sqrt(qs);
+        if (s < t) s = t;
+      };
+      for (int i = 1; i <= S; ++i) {
+        search(i, a + 1);
+        search(i, b + 1);
+        search(a + 1, i);
+        search(b + 1, i);
+      }
+
+      if (score < s * (1 + get_random_double() * time * 0.1)) {
         score = s;
       } else {
         swap(ret, a, b);
@@ -56,60 +112,6 @@ class ConnectedComponent {
     int t = v[a];
     v[a] = v[b];
     v[b] = t;
-  }
-
-  double calc(vector<int> &v) {
-    int C[MAX_S][MAX_S];
-    for (int i = 0; i < S; ++i)
-      for (int j = 0; j < S; ++j) C[i][j] = M[v[i]][v[j]];
-
-    double score = 0;
-    int qx[MAX_S * MAX_S];
-    int qy[MAX_S * MAX_S];
-    for (int i = 0; i < S; ++i) {
-      for (int j = 0; j < S; ++j) {
-        if (C[i][j] == 0) continue;
-        int qi = 0, qs = 1, sum = C[i][j];
-        qx[qi] = i;
-        qy[qi] = j;
-        while (qi < qs) {
-          int x = qx[qi];
-          int y = qy[qi];
-          ++qi;
-          if (x + 1 < S && C[x + 1][y]) {
-            sum += C[x + 1][y];
-            C[x + 1][y] = 0;
-            qx[qs] = x + 1;
-            qy[qs] = y;
-            ++qs;
-          }
-          if (x - 1 >= 0 && C[x - 1][y]) {
-            sum += C[x - 1][y];
-            C[x - 1][y] = 0;
-            qx[qs] = x - 1;
-            qy[qs] = y;
-            ++qs;
-          }
-          if (y + 1 < S && C[x][y + 1]) {
-            sum += C[x][y + 1];
-            C[x][y + 1] = 0;
-            qx[qs] = x;
-            qy[qs] = y + 1;
-            ++qs;
-          }
-          if (y - 1 >= 0 && C[x][y - 1]) {
-            sum += C[x][y - 1];
-            C[x][y - 1] = 0;
-            qx[qs] = x;
-            qy[qs] = y - 1;
-            ++qs;
-          }
-        }
-        double t = sum * sqrt(qs);
-        if (score < t) score = t;
-      }
-    }
-    return score;
   }
 };
 
