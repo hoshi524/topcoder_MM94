@@ -18,10 +18,9 @@ public class ConnectedComponentVis {
     int[][] permuted;               // permuted matrix
 
     // ---------------------------------------------------
-    String generate(String seedStr) {
+    String generate(long seed) {
         try {
             SecureRandom rnd = SecureRandom.getInstance("SHA1PRNG");
-            long seed = Long.parseLong(seedStr);
             rnd.setSeed(seed);
 
             S = rnd.nextInt(maxS - minS + 1) + minS;
@@ -95,7 +94,7 @@ public class ConnectedComponentVis {
     }
 
     // ---------------------------------------------------
-    public double runTest(String seed) {
+    public double runTest(long seed) {
         try {
             String test = generate(seed);
             if (debug)
@@ -149,14 +148,12 @@ public class ConnectedComponentVis {
 
             // find connected components and calculate score
             int[][] component = new int[S][S];
+            int[] r = new int[S * S], c = new int[S * S];
             int nComp = 0, maxSum = -S * S * 10;
             for (int i = 0; i < S; ++i)
                 for (int j = 0; j < S; ++j) {
-                    if (permuted[i][j] == 0)
-                        continue;
-                    if (component[i][j] > 0)
-                        continue;
-                    int[] r = new int[S * S], c = new int[S * S];
+                    if (permuted[i][j] == 0) continue;
+                    if (component[i][j] > 0) continue;
                     int size = 0, sum = 0;
                     nComp++;
                     component[i][j] = nComp;
@@ -168,8 +165,7 @@ public class ConnectedComponentVis {
                         for (int d = 0; d < 4; ++d) {
                             int newr = r[ind] + dr[d];
                             int newc = c[ind] + dc[d];
-                            if (newr < 0 || newc < 0 || newr >= S || newc >= S)
-                                continue;
+                            if (newr < 0 || newc < 0 || newr >= S || newc >= S) continue;
                             if (component[newr][newc] == 0 && permuted[newr][newc] != 0) {
                                 component[newr][newc] = nComp;
                                 r[size] = newr;
@@ -207,9 +203,10 @@ public class ConnectedComponentVis {
     }
 
     // ------------- visualization part ----------------------
-    static String exec, fileName;
+    static String exec;
     static boolean vis, debug, show_original, save;
     static Process proc;
+    long seed;
     JFrame jf;
     Vis v;
     InputStream is;
@@ -313,7 +310,7 @@ public class ConnectedComponentVis {
                     }
                 g.drawImage(bi, 0, 0, SZX + 10, SZY + 10, null);
                 if (save) {
-                    ImageIO.write(bi, "png", new File(fileName + ".png"));
+                    ImageIO.write(bi, "png", new File(seed + ".png"));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -355,7 +352,7 @@ public class ConnectedComponentVis {
     }
 
     // ---------------------------------------------------
-    public ConnectedComponentVis(String seed) {
+    public double exec(long seed) {
         //interface for runTest
         if (vis) {
             jf = new JFrame();
@@ -374,22 +371,21 @@ public class ConnectedComponentVis {
                 e.printStackTrace();
             }
         }
-        System.out.println("Score = " + runTest(seed));
+        double score = runTest(seed);
+        debug("seed", seed, "score", score);
         if (proc != null)
             try {
                 proc.destroy();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        return score;
     }
 
     // ---------------------------------------------------
     public static void main(String[] args) {
-        String seed = "1";
         SZ = 5;
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-seed"))
-                seed = args[++i];
             if (args[i].equals("-exec"))
                 exec = args[++i];
             if (args[i].equals("-vis"))
@@ -403,21 +399,20 @@ public class ConnectedComponentVis {
             if (args[i].equals("-save"))
                 save = true;
         }
-        if (seed.equals("1") && SZ < 10)
-            SZ = 10;
-        if (seed.equals("1") && !show_original)
-            show_original = true;
-        if (save) {
-            fileName = seed;
-            vis = true;
+        double sum = 0;
+        for (long seed = 1, end = seed + 100; seed < end; ++seed) {
+            sum += new ConnectedComponentVis().exec(seed);
         }
-        vis = true;
-        ConnectedComponentVis f = new ConnectedComponentVis(seed);
+        debug("sum", sum);
     }
 
     // ---------------------------------------------------
     void addFatalError(String message) {
         System.out.println(message);
+    }
+
+    static void debug(Object... o) {
+        System.out.println(Arrays.deepToString(o));
     }
 }
 
