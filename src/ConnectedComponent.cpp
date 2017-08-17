@@ -56,38 +56,23 @@ class ConnectedComponent {
         C[x][y] = 0;
         qx[qi] = x;
         qy[qi] = y;
+        auto push = [&](int x, int y) {
+          if (C[x][y]) {
+            sum += C[x][y];
+            C[x][y] = 0;
+            qx[qs] = x;
+            qy[qs] = y;
+            ++qs;
+          }
+        };
         while (qi < qs) {
           x = qx[qi];
           y = qy[qi];
           ++qi;
-          if (C[x + 1][y]) {
-            sum += C[x + 1][y];
-            C[x + 1][y] = 0;
-            qx[qs] = x + 1;
-            qy[qs] = y;
-            ++qs;
-          }
-          if (C[x - 1][y]) {
-            sum += C[x - 1][y];
-            C[x - 1][y] = 0;
-            qx[qs] = x - 1;
-            qy[qs] = y;
-            ++qs;
-          }
-          if (C[x][y + 1]) {
-            sum += C[x][y + 1];
-            C[x][y + 1] = 0;
-            qx[qs] = x;
-            qy[qs] = y + 1;
-            ++qs;
-          }
-          if (C[x][y - 1]) {
-            sum += C[x][y - 1];
-            C[x][y - 1] = 0;
-            qx[qs] = x;
-            qy[qs] = y - 1;
-            ++qs;
-          }
+          push(x + 1, y);
+          push(x - 1, y);
+          push(x, y + 1);
+          push(x, y - 1);
         }
         double t = sum * sqrt(qs);
         if (s < t) s = t;
