@@ -4,9 +4,6 @@ using namespace std;
 constexpr double TIME_LIMIT = 3000;
 constexpr int MAX_S = 1 << 9;
 
-int S;
-int M[MAX_S][MAX_S];
-
 double get_time() {
   unsigned long long a, d;
   __asm__ volatile("rdtsc" : "=a"(a), "=d"(d));
@@ -32,10 +29,15 @@ class ConnectedComponent {
  public:
   vector<int> permute(vector<int> matrix) {
     double START_TIME = get_time();
-    S = (int)sqrt(matrix.size());
+    int S = (int)sqrt(matrix.size());
+    int M[MAX_S][MAX_S];
+    int C[MAX_S * MAX_S];
+    int T[MAX_S * MAX_S];
+    int queue[MAX_S * MAX_S];
+    memset(C, 0, sizeof(C));
     for (int i = 0; i < S; ++i) {
       for (int j = 0; j < S; ++j) {
-        M[i][j] = matrix[i * S + j];
+        M[i][j] = C[to(i + 1, j + 1)] = matrix[i * S + j];
       }
     }
 
@@ -47,29 +49,36 @@ class ConnectedComponent {
       ret[i] = i;
     }
 
-    int queue[MAX_S * MAX_S];
-    int C[MAX_S * MAX_S];
-    memset(C, 0, sizeof(C));
-    for (int iter = 0, prev = 0; true; ++iter) {
+    int iter = 0, prev = 0;
+    int copy_byte = (S + 1) * MAX_S * 4;
+    while (true) {
       double time = (START_TIME + TIME_LIMIT - get_time()) / TIME_LIMIT;
       if (time < 0) break;
       int a = get_random() % S;
       int b = get_random() % S;
       if (a == b) continue;
-      swap(ret, a, b);
 
-      for (int i = 0; i < S; ++i)
-        for (int j = 0; j < S; ++j) C[to(i + 1, j + 1)] = M[ret[i]][ret[j]];
+      memcpy(T, C, copy_byte);
+      for (int i = 0; i < S; ++i) {
+        T[to(a + 1, i + 1)] = M[ret[b]][ret[i]];
+        T[to(b + 1, i + 1)] = M[ret[a]][ret[i]];
+        T[to(i + 1, a + 1)] = M[ret[i]][ret[b]];
+        T[to(i + 1, b + 1)] = M[ret[i]][ret[a]];
+      }
+      T[to(a + 1, a + 1)] = M[ret[b]][ret[b]];
+      T[to(b + 1, b + 1)] = M[ret[a]][ret[a]];
+      T[to(a + 1, b + 1)] = M[ret[b]][ret[a]];
+      T[to(b + 1, a + 1)] = M[ret[a]][ret[b]];
       double s = 0;
       auto search = [&](int p) {
-        if (C[p] == 0) return;
-        int qi = 0, qs = 1, sum = C[p];
-        C[p] = 0;
+        if (T[p] == 0) return;
+        int qi = 0, qs = 1, sum = T[p];
+        T[p] = 0;
         queue[0] = p;
         auto push = [&](int p) {
-          if (C[p]) {
-            sum += C[p];
-            C[p] = 0;
+          if (T[p]) {
+            sum += T[p];
+            T[p] = 0;
             queue[qs++] = p;
           }
         };
@@ -94,14 +103,23 @@ class ConnectedComponent {
           s * (1 + get_random_double() * time * (iter - prev) / S / 5)) {
         score = s;
         prev = iter;
+        for (int i = 0; i < S; ++i) {
+          C[to(a + 1, i + 1)] = M[ret[b]][ret[i]];
+          C[to(b + 1, i + 1)] = M[ret[a]][ret[i]];
+          C[to(i + 1, a + 1)] = M[ret[i]][ret[b]];
+          C[to(i + 1, b + 1)] = M[ret[i]][ret[a]];
+        }
+        C[to(a + 1, a + 1)] = M[ret[b]][ret[b]];
+        C[to(b + 1, b + 1)] = M[ret[a]][ret[a]];
+        C[to(a + 1, b + 1)] = M[ret[b]][ret[a]];
+        C[to(b + 1, a + 1)] = M[ret[a]][ret[b]];
+        swap(ret, a, b);
         if (best < s) {
           best = s;
           ans = ret;
         }
-      } else {
-        swap(ret, a, b);
       }
-      // cerr << score << endl;
+      ++iter;
     }
     return ans;
   }
