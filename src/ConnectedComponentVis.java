@@ -372,7 +372,7 @@ public class ConnectedComponentVis {
             }
         }
         double score = runTest(seed);
-        debug("seed", seed, "score", score);
+        debug("seed", seed, "size", S, "score", score);
         if (proc != null)
             try {
                 proc.destroy();

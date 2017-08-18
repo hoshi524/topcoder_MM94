@@ -39,7 +39,7 @@ class ConnectedComponent {
     }
     int qx[MAX_S * MAX_S];
     int qy[MAX_S * MAX_S];
-    while (true) {
+    for (int iter = 0, prev = 0; true; ++iter) {
       double time = (START_TIME + TIME_LIMIT - get_time()) / TIME_LIMIT;
       if (time < 0) break;
       int a = get_random() % S;
@@ -84,11 +84,14 @@ class ConnectedComponent {
         search(b + 1, i);
       }
 
-      if (score < s * (1 + get_random_double() * time * 0.1)) {
+      if (score <
+          s * (1 + get_random_double() * time * (iter - prev) / S / 5)) {
         score = s;
+        prev = iter;
       } else {
         swap(ret, a, b);
       }
+      // cerr << score << endl;
     }
     return ret;
   }
