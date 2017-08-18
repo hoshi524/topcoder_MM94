@@ -37,8 +37,7 @@ class ConnectedComponent {
     for (int i = 0; i < S; ++i) {
       ret[i] = i;
     }
-    int qx[MAX_S * MAX_S];
-    int qy[MAX_S * MAX_S];
+    int queue[MAX_S * MAX_S];
     for (int iter = 0, prev = 0; true; ++iter) {
       double time = (START_TIME + TIME_LIMIT - get_time()) / TIME_LIMIT;
       if (time < 0) break;
@@ -52,29 +51,29 @@ class ConnectedComponent {
       double s = 0;
       auto search = [&](int x, int y) {
         if (C[x][y] == 0) return;
-        int qi = 0, qs = 1, sum = C[x][y];
+        int qi = 0, qs = 2, sum = C[x][y];
         C[x][y] = 0;
-        qx[qi] = x;
-        qy[qi] = y;
+        queue[qi + 0] = x;
+        queue[qi + 1] = y;
         auto push = [&](int x, int y) {
           if (C[x][y]) {
             sum += C[x][y];
             C[x][y] = 0;
-            qx[qs] = x;
-            qy[qs] = y;
-            ++qs;
+            queue[qs + 0] = x;
+            queue[qs + 1] = y;
+            qs += 2;
           }
         };
         while (qi < qs) {
-          x = qx[qi];
-          y = qy[qi];
-          ++qi;
+          x = queue[qi + 0];
+          y = queue[qi + 1];
+          qi += 2;
           push(x + 1, y);
           push(x - 1, y);
           push(x, y + 1);
           push(x, y - 1);
         }
-        double t = sum * sqrt(qs);
+        double t = sum * sqrt(qs / 2);
         if (s < t) s = t;
       };
       for (int i = 1; i <= S; ++i) {
