@@ -26,7 +26,7 @@ void swap(vector<int> &v, int a, int b) {
   v[b] = t;
 }
 
-int to(int x, int y) { return (x << 9) + y; }
+int to(int x, int y) { return (x << 9) | y; }
 
 class ConnectedComponent {
  public:
@@ -40,7 +40,9 @@ class ConnectedComponent {
     }
 
     vector<int> ret(S);
+    vector<int> ans(S);
     double score = 0;
+    double best = 0;
     for (int i = 0; i < S; ++i) {
       ret[i] = i;
     }
@@ -92,12 +94,16 @@ class ConnectedComponent {
           s * (1 + get_random_double() * time * (iter - prev) / S / 5)) {
         score = s;
         prev = iter;
+        if (best < s) {
+          best = s;
+          ans = ret;
+        }
       } else {
         swap(ret, a, b);
       }
       // cerr << score << endl;
     }
-    return ret;
+    return ans;
   }
 };
 

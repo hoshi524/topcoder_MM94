@@ -383,14 +383,20 @@ public class ConnectedComponentVis {
 
     // ---------------------------------------------------
     public static void main(String[] args) {
-        double s0 = 0, s1 = 0;
-        for (long seed = 1, end = seed + 100; seed < end; ++seed) {
-            double v0 = new ConnectedComponentVis().exec(args[0], seed);
-            double v1 = new ConnectedComponentVis().exec(args[1], seed);
-            double max = Math.max(v0, v1);
-            s0 += v0 / max;
-            s1 += v1 / max;
-            debug(s0, s1);
+        if (args.length == 1) {
+            new ConnectedComponentVis().exec(args[0], 1);
+        } else if(args.length == 2) {
+            double s0 = 0, s1 = 0;
+            for (long seed = 1, end = seed + 10000; seed < end; ++seed) {
+                double v0 = new ConnectedComponentVis().exec(args[0], seed);
+                double v1 = new ConnectedComponentVis().exec(args[1], seed);
+                double max = Math.max(v0, v1);
+                s0 += v0 / max;
+                s1 += v1 / max;
+                debug(s0, s1);
+            }
+        } else {
+            debug("error");
         }
     }
 

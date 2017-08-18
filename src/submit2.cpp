@@ -37,7 +37,7 @@ class ConnectedComponent {
     for (int i = 0; i < S; ++i) {
       ret[i] = i;
     }
-    int queue[MAX_S * MAX_S];
+    int queue[MAX_S * MAX_S * 2];
     for (int iter = 0, prev = 0; true; ++iter) {
       double time = (START_TIME + TIME_LIMIT - get_time()) / TIME_LIMIT;
       if (time < 0) break;
