@@ -31,10 +31,11 @@ class ConnectedComponent {
     double START_TIME = get_time();
     int S = (int)sqrt(matrix.size());
     int M[MAX_S][MAX_S];
-    int C[MAX_S * MAX_S];
-    int T[MAX_S * MAX_S];
+    char C[MAX_S * MAX_S];
+    char T[MAX_S * MAX_S];
     int queue[MAX_S * MAX_S];
     memset(C, 0, sizeof(C));
+    memset(T, 0, sizeof(T));
     for (int i = 0; i < S; ++i) {
       for (int j = 0; j < S; ++j) {
         M[i][j] = C[to(i + 1, j + 1)] = matrix[i * S + j];
@@ -50,7 +51,7 @@ class ConnectedComponent {
     }
 
     int iter = 0, prev = 0;
-    int copy_byte = (S + 1) * MAX_S * 4;
+    int copy_byte = (S + 1) * MAX_S;
     while (true) {
       double time = (START_TIME + TIME_LIMIT - get_time()) / TIME_LIMIT;
       if (time < 0) break;
