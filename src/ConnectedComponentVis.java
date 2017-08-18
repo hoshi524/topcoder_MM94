@@ -203,9 +203,8 @@ public class ConnectedComponentVis {
     }
 
     // ------------- visualization part ----------------------
-    static String exec;
     static boolean vis, debug, show_original, save;
-    static Process proc;
+    Process proc;
     long seed;
     JFrame jf;
     Vis v;
@@ -214,7 +213,7 @@ public class ConnectedComponentVis {
     BufferedReader br;
     // problem-specific drawing params
     int SZX, SZY;
-    static int SZ;
+    static int SZ = 10;
     boolean[][] maxComponent;
 
     // ---------------------------------------------------
@@ -352,7 +351,7 @@ public class ConnectedComponentVis {
     }
 
     // ---------------------------------------------------
-    public double exec(long seed) {
+    public double exec(String exec, long seed) {
         //interface for runTest
         if (vis) {
             jf = new JFrame();
@@ -384,26 +383,15 @@ public class ConnectedComponentVis {
 
     // ---------------------------------------------------
     public static void main(String[] args) {
-        SZ = 5;
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-exec"))
-                exec = args[++i];
-            if (args[i].equals("-vis"))
-                vis = true;
-            if (args[i].equals("-debug"))
-                debug = true;
-            if (args[i].equals("-size"))
-                SZ = Integer.parseInt(args[++i]);
-            if (args[i].equals("-show-original"))
-                show_original = true;
-            if (args[i].equals("-save"))
-                save = true;
-        }
-        double sum = 0;
+        double s0 = 0, s1 = 0;
         for (long seed = 1, end = seed + 100; seed < end; ++seed) {
-            sum += new ConnectedComponentVis().exec(seed);
+            double v0 = new ConnectedComponentVis().exec(args[0], seed);
+            double v1 = new ConnectedComponentVis().exec(args[1], seed);
+            double max = Math.max(v0, v1);
+            s0 += v0 / max;
+            s1 += v1 / max;
+            debug(s0, s1);
         }
-        debug("sum", sum);
     }
 
     // ---------------------------------------------------
