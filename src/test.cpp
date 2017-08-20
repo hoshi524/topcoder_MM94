@@ -142,14 +142,16 @@ class ConnectedComponent {
         double t = sum * sqrt(qs);
         if (s < t) s = t;
       };
-      for (int i = 1; i <= S; ++i) {
-        search(to(i, a + 1));
-        search(to(i, b + 1));
-        search(to(a + 1, i));
-        search(to(b + 1, i));
+      {
+        int c = to((S >> 1) + 1, (S >> 1) + 1);
+        search(c);
+        search(c + 1);
+        search(c - 1);
+        search(c + MAX_S);
+        search(c - MAX_S);
       }
-      if (score <
-          s * (1 + get_random_double() * time * (iter - prev) / S / 5)) {
+
+      if (score < s * (1 + time * (iter - prev) / S / 10)) {
         score = s;
         prev = iter;
         for (int i = 0; i < S; ++i) {

@@ -90,12 +90,14 @@ class ConnectedComponent {
         double t = sum * sqrt(qs);
         if (s < t) s = t;
       };
-      int ts = S >> 1;
-      search(to(ts, ts));
-      search(to(ts + 1, ts));
-      search(to(ts - 1, ts));
-      search(to(ts, ts + 1));
-      search(to(ts, ts - 1));
+      {
+        int c = to((S >> 1) + 1, (S >> 1) + 1);
+        search(c);
+        search(c + 1);
+        search(c - 1);
+        search(c + MAX_S);
+        search(c - MAX_S);
+      }
 
       if (score < s * (1 + time * (iter - prev) / S / 10)) {
         score = s;
