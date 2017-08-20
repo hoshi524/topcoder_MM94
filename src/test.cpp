@@ -144,7 +144,6 @@ class ConnectedComponent {
       };
       {
         int c = to((S >> 1) + 1, (S >> 1) + 1);
-        search(c);
         search(c + 1);
         search(c - 1);
         search(c + MAX_S);
