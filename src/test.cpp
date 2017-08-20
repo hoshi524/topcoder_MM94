@@ -112,7 +112,7 @@ class ConnectedComponent {
             }
             fprintf(stderr, "\n");
           }
-          fprintf(stderr, "%f\n", s);
+          fprintf(stderr, "%f %d\n", s, (iter - prev));
         };
         print(C);
         print(T);

@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-constexpr double TIME_LIMIT = 3000;
+constexpr double TIME_LIMIT = 2000;
 constexpr int MAX_S = 1 << 9;
 
 double get_time() {
