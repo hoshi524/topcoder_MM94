@@ -2,7 +2,7 @@
 #include <unistd.h>
 using namespace std;
 
-constexpr double TIME_LIMIT = 30000000;
+constexpr double TIME_LIMIT = 20000000;
 constexpr int MAX_S = 1 << 9;
 
 double get_time() {
@@ -16,14 +16,6 @@ unsigned get_random() {
   return y ^= (y ^= (y ^= y << 13) >> 17) << 5;
 }
 
-double get_random_double() { return (double)get_random() / UINT_MAX; }
-
-void swap(vector<int> &v, int a, int b) {
-  int t = v[a];
-  v[a] = v[b];
-  v[b] = t;
-}
-
 int to(int x, int y) { return (x << 9) | y; }
 
 class ConnectedComponent {
@@ -31,7 +23,7 @@ class ConnectedComponent {
   vector<int> permute(vector<int> matrix) {
     double START_TIME = get_time();
     int S = (int)sqrt(matrix.size());
-    int M[MAX_S][MAX_S];
+    char M[MAX_S][MAX_S];
     char C[MAX_S * MAX_S];
     char T[MAX_S * MAX_S];
     int queue[MAX_S * MAX_S];
@@ -45,8 +37,8 @@ class ConnectedComponent {
 
     vector<int> ret(S);
     vector<int> ans(S);
-    double score = 0;
-    double best = 0;
+    double score = -1;
+    double best = -1;
     for (int i = 0; i < S; ++i) {
       ret[i] = i;
     }
@@ -56,21 +48,26 @@ class ConnectedComponent {
     while (true) {
       double time = (START_TIME + TIME_LIMIT - get_time()) / TIME_LIMIT;
       if (time < 0) break;
-      int a = get_random() % S;
-      int b = get_random() % S;
-      if (a == b) continue;
+      int a, b;
+      do {
+        a = get_random() % S;
+        b = get_random() % S;
+      } while (a == b);
 
       memcpy(T, C, copy_byte);
-      for (int i = 0; i < S; ++i) {
-        T[to(a + 1, i + 1)] = M[ret[b]][ret[i]];
-        T[to(b + 1, i + 1)] = M[ret[a]][ret[i]];
-        T[to(i + 1, a + 1)] = M[ret[i]][ret[b]];
-        T[to(i + 1, b + 1)] = M[ret[i]][ret[a]];
-      }
-      T[to(a + 1, a + 1)] = M[ret[b]][ret[b]];
-      T[to(b + 1, b + 1)] = M[ret[a]][ret[a]];
-      T[to(a + 1, b + 1)] = M[ret[b]][ret[a]];
-      T[to(b + 1, a + 1)] = M[ret[a]][ret[b]];
+      auto swap = [&](char *x, int a, int b) {
+        for (int i = 0; i < S; ++i) {
+          x[to(a + 1, i + 1)] = M[ret[b]][ret[i]];
+          x[to(b + 1, i + 1)] = M[ret[a]][ret[i]];
+          x[to(i + 1, a + 1)] = M[ret[i]][ret[b]];
+          x[to(i + 1, b + 1)] = M[ret[i]][ret[a]];
+        }
+        x[to(a + 1, a + 1)] = M[ret[b]][ret[b]];
+        x[to(b + 1, b + 1)] = M[ret[a]][ret[a]];
+        x[to(a + 1, b + 1)] = M[ret[b]][ret[a]];
+        x[to(b + 1, a + 1)] = M[ret[a]][ret[b]];
+      };
+      swap(T, a, b);
       {
         auto print = [&](char *t) {
           char m[MAX_S * MAX_S];
@@ -153,17 +150,10 @@ class ConnectedComponent {
       if (score < s * (1 + time * (iter - prev) / S / 10)) {
         score = s;
         prev = iter;
-        for (int i = 0; i < S; ++i) {
-          C[to(a + 1, i + 1)] = M[ret[b]][ret[i]];
-          C[to(b + 1, i + 1)] = M[ret[a]][ret[i]];
-          C[to(i + 1, a + 1)] = M[ret[i]][ret[b]];
-          C[to(i + 1, b + 1)] = M[ret[i]][ret[a]];
-        }
-        C[to(a + 1, a + 1)] = M[ret[b]][ret[b]];
-        C[to(b + 1, b + 1)] = M[ret[a]][ret[a]];
-        C[to(a + 1, b + 1)] = M[ret[b]][ret[a]];
-        C[to(b + 1, a + 1)] = M[ret[a]][ret[b]];
-        swap(ret, a, b);
+        swap(C, a, b);
+        int t = ret[a];
+        ret[a] = ret[b];
+        ret[b] = t;
         if (best < s) {
           best = s;
           ans = ret;

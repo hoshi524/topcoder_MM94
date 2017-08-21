@@ -28,9 +28,15 @@ class ConnectedComponent {
     int queue[MAX_S * MAX_S];
     memset(C, 0, sizeof(C));
     memset(T, 0, sizeof(T));
+    int mx = 0, my = 0, mv = 0, rx = 0, ry = 0;
     for (int i = 0; i < S; ++i) {
       for (int j = 0; j < S; ++j) {
         M[i][j] = C[to(i + 1, j + 1)] = matrix[i * S + j];
+        if (mv < M[i][j]) {
+          mv = M[i][j];
+          mx = rx = i;
+          my = ry = j;
+        }
       }
     }
 
@@ -56,6 +62,8 @@ class ConnectedComponent {
       memcpy(T, C, copy_byte);
       auto swap = [&](char *x, int a, int b) {
         for (int i = 0; i < S; ++i) {
+          if (mx == ret[i]) rx = i;
+          if (my == ret[i]) ry = i;
           x[to(a + 1, i + 1)] = M[ret[b]][ret[i]];
           x[to(b + 1, i + 1)] = M[ret[a]][ret[i]];
           x[to(i + 1, a + 1)] = M[ret[i]][ret[b]];
@@ -65,11 +73,18 @@ class ConnectedComponent {
         x[to(b + 1, b + 1)] = M[ret[a]][ret[a]];
         x[to(a + 1, b + 1)] = M[ret[b]][ret[a]];
         x[to(b + 1, a + 1)] = M[ret[a]][ret[b]];
+        if (mx == ret[b])
+          rx = a;
+        else if (mx == ret[a])
+          rx = b;
+        if (my == ret[a])
+          ry = b;
+        else if (my == ret[b])
+          ry = a;
       };
       swap(T, a, b);
       double s = 0;
       auto search = [&](int p) {
-        if (T[p] == 0) return;
         int qi = 0, qs = 1, sum = T[p];
         T[p] = 0;
         queue[0] = p;
@@ -90,13 +105,7 @@ class ConnectedComponent {
         double t = sum * sqrt(qs);
         if (s < t) s = t;
       };
-      {
-        int c = to((S >> 1) + 1, (S >> 1) + 1);
-        search(c + 1);
-        search(c - 1);
-        search(c + MAX_S);
-        search(c - MAX_S);
-      }
+      { search(to(rx + 1, ry + 1)); }
 
       if (score < s * (1 + time * (iter - prev) / S / 10)) {
         score = s;
