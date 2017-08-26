@@ -24,7 +24,10 @@ struct State {
   int permute[MAX_S];
   double score;
 
-  void copy(State& s) { memcpy(permute, s.permute, sizeof(permute)); }
+  void copy(State& s) {
+    memcpy(permute, s.permute, sizeof(permute));
+    score = s.score;
+  }
 
   void transition(int index, int value) {
     permute[index] = value;
@@ -35,7 +38,6 @@ struct State {
         m[to(i + 1, j + 1)] = M[permute[i]][permute[j]];
       }
     }
-    score = 0;
     static int queue[MAX_S * MAX_S];
     auto search = [&](int p) {
       if (m[p] == 0) return;
@@ -60,9 +62,8 @@ struct State {
       if (score < t) score = t;
     };
     for (int i = 0; i <= index; ++i) {
-      for (int j = 0; j <= index; ++j) {
-        search(to(i, j));
-      }
+      search(to(i, index));
+      search(to(index, i));
     }
   }
 };
@@ -100,7 +101,7 @@ class ConnectedComponent {
             t = j;
           }
         }
-        State s = *queue[i][t];
+        State& s = *queue[i][t];
         queue[i].erase(queue[i].begin() + t);
 
         static bool used[MAX_S];

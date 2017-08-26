@@ -384,7 +384,7 @@ public class ConnectedComponentVis {
     // ---------------------------------------------------
     public static void main(String[] args) {
         if (args.length == 1) {
-            for (long seed = 1, end = seed + 10000; seed < end; ++seed) {
+            for (long seed = 1, end = seed + 10; seed < end; ++seed) {
                 double score = new ConnectedComponentVis().exec(args[0], seed);
                 if (score < 1) throw new RuntimeException("error : " + seed);
             }
