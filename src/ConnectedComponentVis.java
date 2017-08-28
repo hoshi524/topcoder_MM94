@@ -370,8 +370,10 @@ public class ConnectedComponentVis {
                 e.printStackTrace();
             }
         }
+        long start = System.currentTimeMillis();
         double score = runTest(seed);
-        debug("seed", seed, "size", S, "score", score);
+        long end = System.currentTimeMillis();
+        debug("seed", seed, "size", S, "time", end - start, "score", score);
         if (proc != null)
             try {
                 proc.destroy();

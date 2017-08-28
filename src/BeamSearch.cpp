@@ -2,7 +2,7 @@
 using namespace std;
 
 constexpr double TIME_LIMIT = 2000;
-constexpr int MAX_S = 1 << 9;
+constexpr int MAX_S = 500;
 constexpr int MAX_SS = MAX_S * MAX_S;
 
 double get_time() {
@@ -18,22 +18,21 @@ unsigned get_random() {
 
 double get_random_double() { return (double)get_random() / UINT_MAX; }
 
-int to(int x, int y) { return (x << 9) | y; }
-
 int S;
 char M[MAX_S][MAX_S];
 
+int to(int x, int y) { return x * S + y; }
+
 struct State {
-  int permute[MAX_S];
+  int permute[MAX_S], data[MAX_SS], sum[MAX_SS];
   double score;
-  int data[MAX_SS], sum[MAX_SS];
 
   void init() {
     score = 0;
-    for (int i = 0; i < MAX_S; ++i) {
+    for (int i = 0; i < S; ++i) {
       permute[i] = i;
     }
-    for (int i = 0; i < MAX_SS; ++i) {
+    for (int i = 0, SS = S * S; i < SS; ++i) {
       data[i] = -1;
     }
   }
