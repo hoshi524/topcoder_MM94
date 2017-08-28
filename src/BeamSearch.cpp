@@ -3,6 +3,7 @@ using namespace std;
 
 constexpr double TIME_LIMIT = 2000;
 constexpr int MAX_S = 1 << 9;
+constexpr int MAX_SS = MAX_S * MAX_S;
 
 double get_time() {
   unsigned long long a, d;
@@ -15,6 +16,8 @@ unsigned get_random() {
   return y ^= (y ^= (y ^= y << 13) >> 17) << 5;
 }
 
+double get_random_double() { return (double)get_random() / UINT_MAX; }
+
 int to(int x, int y) { return (x << 9) | y; }
 
 int S;
@@ -23,56 +26,68 @@ char M[MAX_S][MAX_S];
 struct State {
   int permute[MAX_S];
   double score;
+  int data[MAX_SS], sum[MAX_SS];
 
-  void copy(State& s) {
-    memcpy(permute, s.permute, sizeof(permute));
-    score = s.score;
+  void init() {
+    score = 0;
+    for (int i = 0; i < MAX_S; ++i) {
+      permute[i] = i;
+    }
+    for (int i = 0; i < MAX_SS; ++i) {
+      data[i] = -1;
+    }
   }
 
-  void transition(int index, int value) {
-    permute[index] = value;
-    static char m[MAX_S * MAX_S];
-    memset(m, 0, sizeof(m));
-    for (int i = 0; i <= index; ++i) {
-      for (int j = 0; j <= index; ++j) {
-        m[to(i + 1, j + 1)] = M[permute[i]][permute[j]];
+  void copy(const State& s, int x) {
+    score = s.score;
+    memcpy(permute, s.permute, sizeof(permute));
+    for (int i = 0; i <= x; ++i) {
+      for (int j = 0; j <= x; ++j) {
+        int p = to(i, j);
+        data[p] = s.data[p];
+        sum[p] = s.sum[p];
       }
     }
-    static int queue[MAX_S * MAX_S];
-    auto search = [&](int p) {
-      if (m[p] == 0) return;
-      int qi = 0, qs = 1, sum = m[p];
-      m[p] = 0;
-      queue[0] = p;
-      auto push = [&](int p) {
-        if (m[p]) {
-          sum += m[p];
-          m[p] = 0;
-          queue[qs++] = p;
-        }
+  }
+
+  void unite(int x, int y) {
+    x = root(x);
+    y = root(y);
+    if (x != y) {
+      if (data[y] < data[x]) swap(x, y);
+      data[x] += data[y];
+      data[y] = x;
+      sum[x] += sum[y];
+    }
+  }
+  int root(int x) { return data[x] < 0 ? x : data[x] = root(data[x]); }
+  double getScore(int x) {
+    x = root(x);
+    return sum[x] * sqrt(-data[x]);
+  }
+
+  void transition(int l, int r) {
+    int t = permute[l];
+    permute[l] = permute[r];
+    permute[r] = t;
+
+    for (int i = 0; i <= l; ++i) {
+      sum[to(i, l)] = M[permute[i]][permute[l]];
+      sum[to(l, i)] = M[permute[l]][permute[i]];
+    }
+    for (int i = 0; i < l; ++i) {
+      auto unite_ = [&](int x, int y, int a, int b) {
+        if (M[permute[x]][permute[y]] && M[permute[a]][permute[b]])
+          unite(to(x, y), to(a, b));
       };
-      while (qi < qs) {
-        p = queue[qi++];
-        push(p + 1);
-        push(p - 1);
-        push(p + MAX_S);
-        push(p - MAX_S);
-      }
-      double t = sum * sqrt(qs);
-      if (score < t) score = t;
-    };
-    for (int i = 0; i <= index; ++i) {
-      search(to(i, index));
-      search(to(index, i));
+      unite_(i, l, i, l - 1);
+      unite_(i, l, i + 1, l);
+      unite_(l, i, l - 1, i);
+      unite_(l, i, l, i + 1);
+      score = max({score, getScore(to(i, l)), getScore(to(l, i))});
     }
   }
 };
-
-State& get() {
-  static int index = 0;
-  static State buf[0x80000];
-  return buf[index++];
-}
 
 class ConnectedComponent {
  public:
@@ -85,49 +100,37 @@ class ConnectedComponent {
       }
     }
 
-    State& best = get();
-
-    vector<State*> queue[MAX_S];
-    queue[0].emplace_back(&best);
-
+    double score = 0;
+    vector<int> permute(S);
+    State current;
+    State next;
     while (START_TIME + TIME_LIMIT > get_time()) {
+      current.init();
       for (int i = 0; i < S; ++i) {
-        if (queue[i].empty()) continue;
-        int t = 0;
-        double score = 0;
-        for (int j = 0; j < queue[i].size(); ++j) {
-          if (score < queue[i][j]->score) {
-            score = queue[i][j]->score;
-            t = j;
+        if (i < 5) {
+          current.transition(i, i + get_random() % (S - i));
+        } else {
+          double ts = 0;
+          int tj = 0;
+          for (int j = i; j < S; ++j) {
+            next.copy(current, i);
+            next.transition(i, j);
+            if (ts < next.score) {
+              ts = next.score;
+              tj = j;
+            }
           }
+          current.transition(i, tj);
         }
-        State& s = *queue[i][t];
-        queue[i].erase(queue[i].begin() + t);
-
-        static bool used[MAX_S];
-        memset(used, false, sizeof(used));
-        for (int j = 0; j < i; ++j) {
-          used[s.permute[j]] = true;
-        }
-        for (int j = 0; j < S; ++j) {
-          if (used[j]) continue;
-          State& c = get();
-          c.copy(s);
-          c.transition(i, j);
-          if (i + 1 < S) {
-            queue[i + 1].emplace_back(&c);
-          } else if (best.score < c.score) {
-            best = c;
-          }
+      }
+      if (score < current.score) {
+        score = current.score;
+        for (int i = 0; i < S; ++i) {
+          permute[i] = current.permute[i];
         }
       }
     }
-
-    vector<int> ret(S);
-    for (int i = 0; i < S; ++i) {
-      ret[i] = best.permute[i];
-    }
-    return ret;
+    return permute;
   }
 };
 
