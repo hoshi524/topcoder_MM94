@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-constexpr double TIME_LIMIT = 2000;
+constexpr double TIME_LIMIT = 9500;
 constexpr int MAX_S = 500;
 constexpr int MAX_SS = MAX_S * MAX_S;
 
@@ -38,7 +38,6 @@ struct State {
   }
 
   void copy(const State& s, int x) {
-    score = s.score;
     memcpy(permute, s.permute, sizeof(permute));
     for (int i = 0; i <= x; ++i) {
       for (int j = 0; j <= x; ++j) {
@@ -74,10 +73,12 @@ struct State {
       sum[to(i, l)] = M[permute[i]][permute[l]];
       sum[to(l, i)] = M[permute[l]][permute[i]];
     }
+    score = 0;
     for (int i = 0; i < l; ++i) {
       auto unite_ = [&](int x, int y, int a, int b) {
-        if (M[permute[x]][permute[y]] && M[permute[a]][permute[b]])
+        if (M[permute[x]][permute[y]] && M[permute[a]][permute[b]]) {
           unite(to(x, y), to(a, b));
+        }
       };
       unite_(i, l, i, l - 1);
       unite_(i, l, i + 1, l);
@@ -87,6 +88,9 @@ struct State {
     }
   }
 };
+
+constexpr int MAX_WIDTH = 500;
+State buf[2][MAX_WIDTH];
 
 class ConnectedComponent {
  public:
@@ -99,35 +103,47 @@ class ConnectedComponent {
       }
     }
 
-    double score = 0;
+    State* X[2][MAX_WIDTH];
+    for (int i = 0; i < 2; ++i) {
+      for (int j = 0; j < MAX_WIDTH; ++j) {
+        buf[i][j].init();
+        X[i][j] = &buf[i][j];
+      }
+    }
+    buf[0][0].score = 0;
+    int tn = 1;
+    for (int i = 0; i < S; ++i) {
+      State** current = X[i & 1];
+      State** next = X[(i + 1) & 1];
+      double now = get_time();
+      double passage = now - START_TIME;
+      double remain = START_TIME + TIME_LIMIT - now;
+      double onewidth = (1 + S - i) * (S - i);
+      double onetrans = passage / tn;
+      int width = remain / onetrans / onewidth;
+      if (width < 3) width = 3;
+      if (width > MAX_WIDTH) width = MAX_WIDTH;
+      // cerr << tn << " " << passage << " " << remain << " " << onewidth << " "
+      //      << onetrans << " " << width << endl;
+      for (int j = 0; j < width; ++j) {
+        next[j]->score = -1;
+      }
+      for (int j = 0; j < width - 1; ++j) {
+        State* c = current[j];
+        if (c->score < 0) continue;
+        for (int k = i; k < S; ++k) {
+          State* n = next[width - 1];
+          n->copy(*c, i);
+          n->transition(i, k);
+          sort(next, next + width,
+               [](State* a, State* b) { return a->score > b->score; });
+          ++tn;
+        }
+      }
+    }
     vector<int> permute(S);
-    State current;
-    State next;
-    while (START_TIME + TIME_LIMIT > get_time()) {
-      current.init();
-      for (int i = 0; i < S; ++i) {
-        if (i < 5) {
-          current.transition(i, i + get_random() % (S - i));
-        } else {
-          double ts = 0;
-          int tj = 0;
-          for (int j = i; j < S; ++j) {
-            next.copy(current, i);
-            next.transition(i, j);
-            if (ts < next.score) {
-              ts = next.score;
-              tj = j;
-            }
-          }
-          current.transition(i, tj);
-        }
-      }
-      if (score < current.score) {
-        score = current.score;
-        for (int i = 0; i < S; ++i) {
-          permute[i] = current.permute[i];
-        }
-      }
+    for (int i = 0; i < S; ++i) {
+      permute[i] = X[S & 1][0]->permute[i];
     }
     return permute;
   }
